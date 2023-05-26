@@ -1,18 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-        h1{
-            color:red;
-        }
-    </style>
+  <title>Simultaneous YouTube Video Player</title>
+  <style>
+    .video-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    .video-container iframe {
+      margin: 10px;
+      width: 560px;
+      height: 315px;
+    }
+
+
+  .video-container {
+    display: flex;
+    justify-content: center;
+  }
+
+  .video-container iframe {
+    margin: 10px;
+    width: 560px;
+    height: 315px;
+  }
+
+  #player1 {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  #player1 iframe {
+    width: 100%;
+    height: 100%;
+  }
+
+  </style>
 </head>
 <body>
-    <h1>ข้อมูลนักศึกษา</h1>
-    <h1>ยอดนักศึกษา</h1>
+  <div class="video-container">
+    <input type="text" id="link1" placeholder="Enter YouTube link for Video 1">
+    <input type="text" id="link2" placeholder="Enter YouTube link for Video 2">
+    <button onclick="loadVideos()">Load Videos</button>
+  </div>
+
+  <div class="video-container">
+    <div id="player1"></div>
+    <div id="player2"></div>
+  </div>
+
+  <script>
+    var player1;
+    var player2;
+
+    function loadVideos() {
+      var link1 = document.getElementById('link1').value;
+      var link2 = document.getElementById('link2').value;
+
+      var videoId1 = extractVideoId(link1);
+      var videoId2 = extractVideoId(link2);
+
+      if (player1) {
+        player1.destroy();
+      }
+      if (player2) {
+        player2.destroy();
+      }
+
+      player1 = new YT.Player('player1', {
+        height: '315',
+        width: '560',
+        videoId: videoId1,
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        }
+      });
+
+      player2 = new YT.Player('player2', {
+        height: '315',
+        width: '560',
+        videoId: videoId2,
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      // Autoplay both videos
+      event.target.playVideo();
+    }
+
+    function onPlayerStateChange(event) {
+      // Synchronize video state changes
+      var player1State = event.target.getPlayerState();
+      var player2State = event.target.h.b.getPlayerState();
+
+      if (player1State === YT.PlayerState.PLAYING) {
+        if (player2State !== YT.PlayerState.PLAYING) {
+          event.target.h.b.playVideo();
+        }
+      } else if (player1State === YT.PlayerState.PAUSED) {
+        if (player2State === YT.PlayerState.PLAYING) {
+          event.target.h.b.pauseVideo();
+        }
+      }
+
+      if (player2State === YT.PlayerState.PLAYING) {
+        if (player1State !== YT.PlayerState.PLAYING) {
+          event.target.h.b.playVideo();
+        }
+      } else if (player2State === YT.PlayerState.PAUSED) {
+        if (player1State === YT.PlayerState.PLAYING) {
+          event.target.h.b.pauseVideo();
+        }
+      }
+    }
+
+    function extractVideoId(url) {
+      var match = url.match(/(?:\?v=|\/embed\/|\.be\/|\/v\/|\/\d{2,}\/|\/embed\/|\/\d{2,})[^#\&\?\n]*[^#\&\?\n]/);
+      return match && match[0].length > 11 ? match[0].substring(match[0].length - 11) : null;
+    }
+  </script>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
